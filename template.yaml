@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  luckyhat project management microservice
+
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: nodejs18.x
+    Architectures:
+      - x86_64
+
+Resources:
+  LuckyHatProjectTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: luckyhat-project
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  LuckyHatProjectsApiGw:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'OPTIONS,POST,GET,PUT,DELETE'"
+        AllowHeaders: "'Content-Type, Access-Control-Allow-Origin, Authorization'"
+
+  ProjectManagementFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: app.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LuckyHatProjectTable
+      Events:
+        CreateProject:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LuckyHatProjectsApiGw
+            Path: /projects
+            Method: post
+        GetProjects:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LuckyHatProjectsApiGw
+            Path: /projects
+            Method: get
+        GetProject:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LuckyHatProjectsApiGw
+            Path: /projects/{id}
+            Method: get
+        UpdateProject:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LuckyHatProjectsApiGw
+            Path: /projects/{id}
+            Method: put
+        DeleteProject:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LuckyHatProjectsApiGw
+            Path: /projects/{id}
+            Method: delete
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/app.ts
+
+Outputs:
+  LuckyHatProjectsApiGw:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${LuckyHatProjectsApiGw}.execute-api.${AWS::Region}.amazonaws.com/Prod/'

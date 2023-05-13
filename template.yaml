@@ -19,6 +19,49 @@ Resources:
         Name: id
         Type: String
 
+  LuckyHatProjectUserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: luckyhat-project-user
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: projectId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        - IndexName: byProjectId
+          KeySchema:
+            - AttributeName: projectId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: byUserid
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+
   LuckyHatProjectsApiGw:
     Type: AWS::Serverless::Api
     Properties:
